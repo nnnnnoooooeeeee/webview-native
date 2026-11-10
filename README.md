@@ -1,281 +1,243 @@
 # WebView APK Builder
 
-Turn a website into an Android app. Give it a name, a URL and an icon, and get
-an installable APK that opens the site full screen in the phone's own WebView.
+**Turn any website into an Android app in a few minutes.**
 
-There are three ways to build:
+Type a name, paste a web address, pick an icon, and you get an app (an APK file)
+that you can install on any Android phone. The app opens your website full
+screen, with no browser bars, and it gets its own icon on the home screen.
 
-| Tool | Runs on | Needs |
+You don't need to know how to code.
+
+---
+
+## Quick start
+
+Choose the option that suits you:
+
+| I want to... | Use this | What you need |
 |---|---|---|
-| **Desktop window** (`WebView APK Builder.exe`) | Windows (also macOS/Linux from source) | Java 17 and the Android SDK: the window installs both for you |
-| **Android builder app** (`WebView-APK-Builder.apk`) | Any Android 8.0+ phone | Nothing: builds on the phone, offline, no account |
-| **Terminal / GitHub Actions** | Any computer, or GitHub's servers | Java 17 + Android SDK, or just a GitHub repository |
+| Build apps on my **Windows PC** | [Desktop app](#option-1-desktop-app-windows) | A Windows PC. The app installs everything else for you. |
+| Build apps **on my phone** | [Phone app](#option-2-phone-app-android) | An Android 8.0+ phone. Works offline, no account. |
+| Build apps **in the cloud** | [GitHub Actions](#option-3-github-actions-advanced) | A free GitHub account |
 
-Every generated app is tiny (about 0.1 MB), runs on Android 7.0 and newer on any
-CPU, and can be installed next to the others because each one has its own
-application ID.
+Download the desktop and phone apps from the **[Releases](../../releases)** page.
 
-## Downloads
+---
 
-Ready-made builds of the desktop window and the Android builder app are on the
-[Releases](../../releases) page:
+## Option 1: Desktop app (Windows)
 
-- `WebView-APK-Builder-<version>-windows.exe`: double-click it. On first start it
-  creates the folder `Documents\WebView APK Builder` (your apps, builds and key)
-  and offers to install Java and the Android SDK (about 1 GB, once).
-- `WebView-APK-Builder-<version>.apk`: install it on the phone. Allow "install
-  unknown apps" for your browser or file manager when Android asks.
+1. Download `WebView-APK-Builder-<version>-windows.exe` from
+   [Releases](../../releases) and double-click it.
+2. **First start only:** the app creates a folder at
+   `Documents\WebView APK Builder` to keep your apps, builds and signing key.
+   If Java or the Android SDK is missing, click **Install for me**. This
+   downloads about 1 GB, one time only.
+3. Click **Add app**, then enter:
+   - **Name**: what shows below the icon, e.g. `My Shop`
+   - **Website**: e.g. `https://myshop.com`
+   - **Icon**: a square PNG image (1024 × 1024 looks best)
+4. Tick the apps you want and click **Build**.
+5. Check the summary and confirm. When the build finishes, click
+   **Open folder** to find your APK.
 
-## What the generated apps can do
+| Choose the apps to build | Add an app |
+|---|---|
+| ![Desktop app: list of apps with two ticked and a Build 2 apps button](docs/screenshots/desktop-apps.png) | ![Desktop app: Add app form with name, website, folder, application ID and icon](docs/screenshots/desktop-add-app.png) |
+| **Watch the build** | **Your APKs are ready** |
+| ![Desktop app: build progress with the steps of the current app and a queue](docs/screenshots/desktop-building.png) | ![Desktop app: finished build with three APKs and an Open output folder button](docs/screenshots/desktop-done.png) |
 
-- Pull down at the top of the page to reload, like in Chrome: an arrow appears
-  and turns as you pull; past the trigger point it is armed, and dragging back
-  up before you let go cancels the reload. Inner scroll areas of the page are
-  respected (the pull only starts when they are at the top too).
-- Progress bar while loading, and an offline/error page with a Try again button
-- Android back button goes to the previous page, with Android 13+ predictive back
-- File uploads from `<input type="file">`, honouring `accept=""` and `multiple`
-- `tel:`, `mailto:`, WhatsApp, `intent:` and other links open the matching app
-- Media can autoplay; pinch-to-zoom where the page allows it
-- `http://` URLs work too (for servers on a local network)
-- Logins survive app restarts (cookies are saved when the app goes to the background)
-- If the page's renderer crashes, the app reloads instead of closing
-- English and Indonesian texts, following the phone's language
+To change an app later, click its pencil button. You can also delete an app
+from the edit screen. It goes to the Recycle Bin, so you can get it back.
 
-## Project structure
+> **Windows warning?** Windows SmartScreen may say the app is unrecognised.
+> Click **More info**, then **Run anyway**.
+
+## Option 2: Phone app (Android)
+
+Build apps right on your phone, without a computer or internet.
+
+1. Download `WebView-APK-Builder-<version>.apk` from [Releases](../../releases)
+   on your phone and open it. If Android asks, allow **Install unknown apps**
+   for your browser or file manager.
+2. In the **Apps** tab, tap **Add app**, then fill in the name and website and
+   pick an icon.
+3. Tick the apps you want and tap **Build**.
+4. When it finishes, tap **Install** to put the app on this phone, or
+   **Share** to send it to someone else.
+
+| Your apps | Add an app | Building | Done |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/phone-apps.png" width="200" alt="Phone app: list of apps with two ticked"> | <img src="docs/screenshots/phone-add-app.png" width="200" alt="Phone app: Add app form"> | <img src="docs/screenshots/phone-building.png" width="200" alt="Phone app: building 2 of 3"> | <img src="docs/screenshots/phone-done.png" width="200" alt="Phone app: 3 APKs ready with Install buttons"> |
+
+The other tabs:
+
+- **Builds**: every APK you have built, ready to install, share, save or delete.
+- **Key**: your signing key. Back it up! See [Updating your apps](#updating-your-apps).
+- **Settings**: light, dark or pure black (AMOLED) theme, and wallpaper
+  colours on Android 12+.
+
+## Option 3: GitHub Actions (advanced)
+
+GitHub can build your apps for you on its servers.
+
+1. Fork or copy this repository to your GitHub account.
+2. Add your app in the `apps/` folder (see [Adding an app by hand](#adding-an-app-by-hand)).
+3. Go to the **Actions** tab, then **Build APK**, then **Run workflow**.
+4. Enter the app's folder name (e.g. `google`), or `all` to build every app.
+5. When it finishes, download your APK from the **Releases** page of your
+   repository.
+
+To sign your apps on GitHub, see [Signing on GitHub](#signing-on-github).
+
+---
+
+## What your app can do
+
+Every app you build works like this:
+
+- **Pull down to refresh**, just like in Chrome
+- **Shows a friendly offline page** with a *Try again* button when there's no internet
+- **Back button** goes to the previous page
+- **File uploads** work (photos, documents)
+- **Phone, email and WhatsApp links** open the right app
+- **Stays logged in** after the app is closed
+- **Pinch to zoom** where the website allows it
+- **Videos and audio** can play automatically
+- **English and Indonesian**, following the phone's language
+- **Tiny download** (about 0.1 MB), runs on Android 7.0 and newer
+
+You can build as many apps as you like and install them all on the same phone.
+
+---
+
+## Updating your apps
+
+When you change something and want people to get the new version, keep two
+things the same and change one:
+
+### 1. Use the same signing key (important)
+
+Android only accepts an update if it is signed with the **same key** as the
+version already on the phone. If the key is different, people have to uninstall
+the old app first, and they lose its data, such as their login.
+
+- **Desktop app:** go to the **Signing** screen and either create a new key or
+  choose one you already have.
+- **Phone app:** go to the **Key** tab. A key is created automatically on your
+  first build.
+
+| Desktop: Signing screen | Phone: Key tab |
+|:---:|:---:|
+| <img src="docs/screenshots/desktop-signing.png" width="480" alt="Desktop app: Signing key screen with a release key in use"> | <img src="docs/screenshots/phone-key.png" width="200" alt="Phone app: Key tab with Create new and Import buttons"> |
+
+**Back up your key and its password somewhere safe.** If you lose it, you
+can never update your apps again.
+
+To use the same key on your phone and your PC, export it from one (phone:
+**Export backup**; PC: the keystore file) and import it on the other.
+
+### 2. Keep the same application ID
+
+Every app has an ID like `com.myshop.app`. It is filled in for you when you add
+an app. **Don't change it** after you've given the app to people: a new ID
+makes it a different app.
+
+### 3. Use a higher build number
+
+Android only installs an update if its **build number** is higher than the one
+on the phone. The builder suggests the next number for you, so usually you
+can leave it as it is.
+
+> If you build on more than one device (for example on your PC *and* your
+> phone), each one counts on its own. Pick a number higher than any build
+> you've given out before.
+
+---
+
+## Troubleshooting
+
+**"App not installed" when updating**
+The new APK was signed with a different key, or has a lower build number.
+Use the same key and a higher build number (see [Updating your apps](#updating-your-apps)).
+If you lost the key, uninstall the old app and install the new one.
+
+**Two of my apps replace each other**
+They have the same application ID. Give each app its own ID.
+
+**The app shows a blank or error page**
+Open the website in Chrome on the same phone to check that it works. Check
+that the address starts with `https://` (or `http://` for a server on your
+own network).
+
+**The build fails on my PC**
+Click **Open log** at the end of the build to see what went wrong. The full
+log is also saved in `dist/logs/`. Make sure you have about 1 GB of free disk
+space.
+
+**Android blocks installing the APK**
+Allow **Install unknown apps** for the app you're opening the APK with
+(your browser, file manager or chat app).
+
+---
+
+## Adding an app by hand
+
+Each app is a folder inside `apps/` with two files:
 
 ```
 apps/
-  <folder>/
-    config.json            <- name, URL, application ID, version (see below)
-    icon.png               <- app icon, square PNG (1024x1024 recommended)
-app/                       <- the WebView app every APK is built from (Kotlin, no libraries)
-  build.gradle.kts         <- reads apps/<folder>/, generates icons and assets/webview.json
-  template/icon.png        <- placeholder icon of the template APK
-builder/                   <- the Android builder app (Kotlin, Jetpack Compose)
-tool/
-  gui.py                   <- the desktop window (pywebview); screens in tool/web/
-  build_apk.py             <- terminal builder, also used by the window
-  workspace.py             <- workspace unpacking and Java/SDK setup for the EXE
-  build_exe.py             <- packs the window into one EXE (PyInstaller)
-build-apk.bat              <- Windows launcher: opens the window
-.github/workflows/
-  build-apk.yml            <- builds apps from apps/ on GitHub (manual)
-  release.yml              <- builds the EXE and the builder APK, publishes a release
+  my-shop/
+    config.json   <- the app's settings
+    icon.png      <- square PNG, 1024 × 1024 recommended
 ```
 
-Building never changes files in the repository: Gradle reads `apps/<folder>/`
-at build time (`-PappFolder=<folder>`) and writes everything it generates
-under `app/build/`.
-
-## App settings: `config.json`
+The easiest way is to copy `apps/google`, rename the folder, swap the icon and
+edit `config.json`:
 
 ```json
 {
-  "appName": "Google",
-  "appUrl": "https://google.com",
-  "applicationId": "com.example.google",
+  "appName": "My Shop",
+  "appUrl": "https://myshop.com",
+  "applicationId": "com.myshop.app",
   "versionName": "1.0.0",
   "iconBackground": "#FFFFFF",
   "pullToRefresh": true
 }
 ```
 
-| Field | Description |
+| Setting | What it means |
 |---|---|
 | `appName` | Name shown below the icon. |
-| `appUrl` | Website to open (`http://` or `https://`). |
-| `applicationId` | **Must be unique per app** and look like `com.company.app`. Android uses it to tell apps apart, so two apps with the same ID replace each other. Do not change it after you have given the app to people. |
-| `versionName` | Version shown to users, e.g. `1.0.0`. The build number (`versionCode`) is chosen at build time, see [Build numbers](#build-numbers). |
-| `iconBackground` | (optional) Background color of the adaptive icon as `#RRGGBB`. Default `#FFFFFF`. |
-| `pullToRefresh` | (optional) `false` turns pull-to-refresh off. Default `true`. |
+| `appUrl` | The website to open. Starts with `https://` or `http://`. |
+| `applicationId` | The app's unique ID, like `com.company.app`. **Use a different one for every app** and never change it once people have the app. |
+| `versionName` | The version people see, e.g. `1.0.0`. |
+| `iconBackground` | *(optional)* Background colour behind the icon, e.g. `#FFFFFF`. Default is white. |
+| `pullToRefresh` | *(optional)* Set to `false` to turn off pull to refresh. Default is on. |
 
-The build stops with a clear message if a field is missing or malformed. The
-desktop window and the Android app check the same rules while you type.
+If something is missing or wrong, the build stops and tells you what to fix.
 
-## Adding an app
+---
 
-- **Desktop window or Android app**: tap **Add app**, fill in the form and pick
-  an icon. The folder name and application ID are suggested from the app name.
-- **By hand**: copy `apps/google` to `apps/<new-folder>`, replace `icon.png`
-  and edit `config.json` (especially a **different** `applicationId`).
+## Signing on GitHub
 
-## Building on a computer
-
-### Desktop window
-
-Double-click **`build-apk.bat`** (or run the EXE). The first time it installs
-the window component (`pip install pywebview`). Then:
-
-1. If Java or the Android SDK is missing, **Install for me** downloads Eclipse
-   Temurin 17 and the Android command-line tools into `tools/`.
-2. Tick the apps to build, check the build number, press **Build**.
-3. Confirm the build plan (signing key, Java, SDK and any warnings).
-4. Watch each app's Gradle steps; at the end open the output folder or the log.
-
-Apps are edited with the pencil button and deleted from the edit screen (the
-folder goes to the Recycle Bin, so it can be restored).
-
-From source on any system: `pip install -r tool/requirements.txt`, then
-`python tool/gui.py`.
-
-### Terminal
-
-```bash
-python tool/build_apk.py                        # menu: arrows + space to pick apps
-python tool/build_apk.py google my-shop         # these apps, no questions
-python tool/build_apk.py all --build-number 12  # every app with build number 12
-```
-
-`build-apk.bat google` does the same on Windows.
-
-Output (both window and terminal):
-
-- APKs: `dist/<folder>-v<version>-build<number>.apk`
-- Full Gradle log: `dist/logs/build-<timestamp>.log`
-- Last used build number: `dist/.last_build_number`
-
-### Gradle directly
-
-```bash
-./gradlew assembleRelease -PappFolder=google -PbuildNumber=5
-# output: app/build/outputs/apk/release/app-release.apk
-```
-
-In Android Studio, open the project and press Run: it builds the app named by
-`appFolder` in `gradle.properties`.
-
-Requirements for computer builds: Java 17 or newer (a JDK on `PATH`/`JAVA_HOME`,
-Android Studio's bundled Java, or `tools/jdk`), the Android SDK (found
-automatically, written to `local.properties`), Python 3 for the window and the
-terminal builder, and about 1 GB of disk space for the Gradle caches.
-
-## Building on the phone (Android builder app)
-
-The builder app makes APKs without Gradle, a computer or an internet
-connection:
-
-1. **Apps** tab: add or edit apps (long-press or the pencil button), tick the
-   ones to build and tap **Build**.
-2. The progress screen shows each step; then tap **Install** or **Share**.
-3. **Builds** tab: every APK built so far, with Install, Share, Save copy and Delete.
-4. **Key** tab: the signing key (see [Signing](#signing)).
-5. **Settings** tab: theme (System, Light, Dark), **AMOLED black** for pure black
-   dark mode, and wallpaper colors on Android 12+.
-
-How it works: the builder app contains the WebView app pre-built with
-placeholder values (the `template` build type of `app/`). For each app it
-rewrites the package name, app name and version in the binary
-`AndroidManifest.xml`, replaces `assets/webview.json` (URL and options) and
-the launcher icon PNGs, and signs the result with APK Signature Scheme v2 and
-v3 using [apksig](https://android.googlesource.com/platform/tools/apksig).
-The code inside is identical to a computer build of the same version.
-
-## Building with GitHub Actions
-
-Workflow: [.github/workflows/build-apk.yml](.github/workflows/build-apk.yml)
-
-*Actions* tab -> *Build APK* -> *Run workflow*, then enter an app folder name
-(e.g. `google`) or `all`, and optionally a build number. Each app builds in
-parallel; the APKs are uploaded as workflow artifacts and published as
-**GitHub Releases** tagged `<folder>-v<version>-build<number>`.
-
-## Build numbers
-
-Android only installs an update when its `versionCode` (build number) is higher
-than the installed one.
-
-- Desktop window and terminal: their own counter (`dist/.last_build_number`),
-  suggested as last build + 1. You can change it before each build.
-- Android builder app: its own counter, shown as a chip on the Apps tab (tap to change).
-- GitHub Actions: the workflow run number plus the repository variable
-  `BUILD_NUMBER_OFFSET` (default 0), or the number you enter.
-
-The counters are independent. If phones get APKs from more than one place,
-pick a build number higher than any build they already have.
-
-## Signing
-
-Android only updates an app when the new APK is signed with the **same key**
-as the installed one. Use one release key for all your apps and keep a backup
-of it and its password: without it, people have to uninstall the app before
-they can install an update (and lose its data).
-
-Without a release key, computer builds use the computer's debug key and the
-Android app creates an automatic key on the first build. Both work for
-testing, but each computer or phone signs differently.
-
-**Desktop window**, *Signing* screen:
-
-- *Use an existing keystore*: choose a `.jks`, `.keystore` or `.p12` file and
-  enter its passwords. The window checks them and writes `key.properties`.
-- *Create a new key*: alias, password, name and where to save it. The window
-  creates the keystore with `keytool` and writes `key.properties`.
-- *Copy GitHub secrets*: the four values for GitHub Actions (below).
-
-**Android app**, *Key* tab: create a new key, import a `.jks` or `.p12` file,
-export a backup (`.p12`) and show its password. The key's password is stored
-encrypted with the phone's Android Keystore.
-
-**By hand**: create a keystore once,
-
-```bash
-keytool -genkeypair -v -keystore upload-keystore.jks -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-```
-
-and create `key.properties` in the project root (a relative `storeFile` is
-relative to the project root):
-
-```
-storeFile=C:/path/to/upload-keystore.jks
-storePassword=...
-keyAlias=upload
-keyPassword=...
-```
-
-**GitHub Actions**: add these repository secrets under *Settings -> Secrets and
-variables -> Actions*:
+To sign apps built by GitHub Actions with your own key, add these four
+secrets under **Settings → Secrets and variables → Actions** in your
+repository. The desktop app's **Signing** screen has a **Copy GitHub secrets**
+button that fills them in for you.
 
 | Secret | Value |
 |---|---|
-| `KEYSTORE_BASE64` | Keystore file in base64 (PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks"))`) |
+| `KEYSTORE_BASE64` | Your keystore file in base64. PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks"))` |
 | `KEYSTORE_PASSWORD` | Keystore password |
 | `KEY_ALIAS` | Key alias, e.g. `upload` |
-| `KEY_PASSWORD` | Key password (can stay empty when it equals the keystore password) |
+| `KEY_PASSWORD` | Key password (can stay empty if it's the same as the keystore password) |
 
-`key.properties`, `*.jks` and `*.keystore` are in `.gitignore`: never commit them.
+Never commit your keystore or passwords to the repository.
 
-To sign apps from the Android app and from a computer with the same key,
-export it from one (Android: *Export backup*; computer: the keystore file) and
-import it into the other.
+---
 
-## Releasing the builder tools
+## For developers
 
-Push a tag like `v1.2.0` (or run *Actions* -> *Release* -> *Run workflow* with
-the version). [release.yml](.github/workflows/release.yml) then:
-
-1. runs the builder app's tests and builds its APK (signed with the secrets
-   above when they are set),
-2. builds the Windows EXE with PyInstaller on a Windows runner,
-3. publishes both files as the GitHub Release `v1.2.0`.
-
-## Developing
-
-```bash
-./gradlew assembleRelease                 # WebView app for appFolder in gradle.properties
-./gradlew :builder:assembleDebug          # Android builder app (also builds the template APK)
-./gradlew :builder:testDebugUnitTest      # manifest patching, signing and JKS import tests
-python tool/gui.py                        # desktop window from source
-python tool/build_exe.py 1.2.0            # EXE into tool/dist (run on Windows for a Windows EXE)
-```
-
-Set `WEBVIEW_BUILDER_DEBUG=1` to open the window with developer tools.
-
-Notes:
-
-- The template's placeholder values (`templateAppName`, `templateApplicationId`,
-  ...) are in `gradle.properties`; the builder app reads the same ones.
-- `builder/build.gradle.kts` finds the icon files inside the template APK by
-  comparing hashes with the generated icons, because the build shortens
-  resource paths. That is why the template build type keeps PNGs uncrunched.
-- The pull-to-refresh view is `app/src/main/kotlin/.../PullToRefreshLayout.kt`.
+Building from source, using the terminal builder, the project layout, how
+the phone builder works and how to publish a release are covered in
+**[DEVELOPMENT.md](DEVELOPMENT.md)**.
