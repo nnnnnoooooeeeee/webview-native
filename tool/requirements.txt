@@ -1,0 +1,2 @@
+# Desktop window (tool/gui.py)
+pywebview>=5.0

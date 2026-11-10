@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app name is not here: it comes from apps/<app>/config.json. -->
+    <string name="error_title">Can\'t load the page</string>
+    <string name="error_message">Check your network connection and try again.\n(%1$s)</string>
+    <string name="retry">Try again</string>
+</resources>

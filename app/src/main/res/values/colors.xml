@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#415F91</color>
+    <color name="text">#1A1C1E</color>
+    <color name="text_secondary">#74777F</color>
+    <!-- Round background of the pull-to-refresh indicator. -->
+    <color name="indicator_background">#FFFFFF</color>
+</resources>

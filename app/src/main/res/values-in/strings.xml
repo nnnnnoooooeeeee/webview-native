@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_title">Tidak dapat memuat halaman</string>
+    <string name="error_message">Periksa koneksi jaringan Anda, lalu coba lagi.\n(%1$s)</string>
+    <string name="retry">Coba lagi</string>
+</resources>

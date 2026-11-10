@@ -1,0 +1,152 @@
+# Builds the two downloadable tools and publishes them as one GitHub Release:
+#   - WebView-APK-Builder-<version>-windows.exe  (desktop window, tool/)
+#   - WebView-APK-Builder-<version>.apk          (Android builder app, builder/)
+# Runs when a tag like v1.2.0 is pushed, or by hand under Actions > Release.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, for example 1.2.0 (creates the tag v1.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  #========== VERSION ==========
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - name: Work out the version
+        id: v
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${INPUT_VERSION#v}"
+          fi
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$'; then
+            echo "::error::Version must look like 1.2.0 (got '$version')"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+  #========== ANDROID BUILDER APP ==========
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::Secret KEYSTORE_BASE64 is not set. The builder APK is signed with a random debug key, so the next release can not be installed over it."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > release-keystore.jks
+          cat > key.properties <<EOF
+          storeFile=release-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}
+          EOF
+
+      - name: Test and build
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          chmod +x gradlew
+          ./gradlew :builder:testDebugUnitTest :builder:assembleRelease \
+            -PbuilderVersion="$VERSION" -PbuilderVersionCode="${{ github.run_number }}" --console=plain
+          mkdir -p out
+          cp builder/build/outputs/apk/release/builder-release.apk "out/WebView-APK-Builder-$VERSION.apk"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: android
+          path: out/*.apk
+
+  #========== WINDOWS DESKTOP APP ==========
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Build the EXE
+        shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller pillow -r tool/requirements.txt
+          python tool/build_exe.py "$VERSION"
+          mkdir -p out
+          cp "tool/dist/WebView APK Builder.exe" "out/WebView-APK-Builder-$VERSION-windows.exe"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows
+          path: out/*.exe
+
+  #========== GITHUB RELEASE ==========
+  release:
+    needs: [version, android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v6
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          cat > notes.md <<EOF
+          ## Downloads
+
+          - **WebView-APK-Builder-$VERSION-windows.exe**: the desktop builder for Windows. Double-click it; on first start it offers to install Java and the Android SDK.
+          - **WebView-APK-Builder-$VERSION.apk**: the Android builder. Builds WebView apps right on the phone, no computer needed.
+
+          Commit: $GITHUB_SHA
+          EOF
+          gh release create "$TAG" out/* \
+            --title "WebView APK Builder $VERSION" \
+            --notes-file notes.md \
+            --target "$GITHUB_SHA"

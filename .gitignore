@@ -1,0 +1,38 @@
+# Gradle / Android Studio
+.gradle/
+.kotlin/
+# Only Gradle output folders: a bare "build/" also matched the source package
+# builder/src/main/kotlin/com/webview/builder/build/, which then never got committed.
+/build/
+/*/build/
+captures/
+.idea/
+*.iml
+/local.properties
+
+# Release signing (never commit)
+/key.properties
+*.jks
+*.keystore
+
+# JVM crash reports
+hs_err_pid*.log
+replay_pid*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Build output
+/dist/
+
+# Desktop builder: PyInstaller output and the packed project template
+/tool/build/
+/tool/dist/
+*.spec.bak
+/template.zip
+
+# Desktop window settings in the workspace
+/.builder-settings.json
+/.builder-template
+/tools/

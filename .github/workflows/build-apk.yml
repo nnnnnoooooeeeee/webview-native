@@ -1,0 +1,155 @@
+# Builds WebView apps from apps/ on GitHub and publishes each APK as a GitHub
+# Release (tag <folder>-v<version>-build<number>). Start it by hand under
+# Actions > Build APK > Run workflow.
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Folder in apps/ (for example: google), or "all" for every app'
+        required: true
+        default: google
+      build_number:
+        description: 'Build number / versionCode (empty: offset + workflow run number)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Added to the run number when no build number is given. Set the repository
+  # variable BUILD_NUMBER_OFFSET to continue above build numbers you used before.
+  BUILD_NUMBER_OFFSET: ${{ vars.BUILD_NUMBER_OFFSET || '0' }}
+
+jobs:
+  select-apps:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.select.outputs.apps }}
+      build_number: ${{ steps.number.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Select apps to build
+        id: select
+        env:
+          INPUT_APP: ${{ github.event.inputs.app }}
+        run: |
+          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+
+          if [ "$INPUT_APP" = "all" ]; then
+            apps="$all_apps"
+          elif [ -d "apps/$INPUT_APP" ]; then
+            apps="$INPUT_APP"
+          else
+            echo "::error::App '$INPUT_APP' not found. Available: $(echo $all_apps)"
+            exit 1
+          fi
+
+          json=$(echo "$apps" | grep -v '^$' | jq -R . | jq -cs .)
+          echo "Apps: $json"
+          echo "apps=$json" >> "$GITHUB_OUTPUT"
+
+      - name: Choose build number
+        id: number
+        env:
+          INPUT_NUMBER: ${{ github.event.inputs.build_number }}
+        run: |
+          if [ -n "$INPUT_NUMBER" ]; then
+            case "$INPUT_NUMBER" in
+              ''|*[!0-9]*) echo "::error::build_number must be a whole number (got '$INPUT_NUMBER')"; exit 1 ;;
+            esac
+            number="$INPUT_NUMBER"
+          else
+            number=$(( BUILD_NUMBER_OFFSET + ${{ github.run_number }} ))
+          fi
+          echo "Build number: $number"
+          echo "build_number=$number" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: select-apps
+    if: needs.select-apps.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.select-apps.outputs.apps) }}
+    env:
+      BUILD_NUMBER: ${{ needs.select-apps.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Read app config
+        id: config
+        run: |
+          cfg="apps/${{ matrix.app }}/config.json"
+          echo "name=$(jq -r .appName "$cfg")" >> "$GITHUB_OUTPUT"
+          echo "url=$(jq -r .appUrl "$cfg")" >> "$GITHUB_OUTPUT"
+          echo "id=$(jq -r .applicationId "$cfg")" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r .versionName "$cfg")" >> "$GITHUB_OUTPUT"
+
+      - name: Set up release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::Secret KEYSTORE_BASE64 is not set. The APK is signed with a random debug key, so the next update can NOT be installed over it (uninstall first)."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > release-keystore.jks
+          cat > key.properties <<EOF
+          storeFile=release-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}
+          EOF
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -PappFolder="${{ matrix.app }}" \
+            -PbuildNumber="$BUILD_NUMBER" \
+            --console=plain
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk \
+            "dist/${{ matrix.app }}-v${{ steps.config.outputs.version }}-build$BUILD_NUMBER.apk"
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.app }}-apk
+          path: dist/*.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ matrix.app }}-v${{ steps.config.outputs.version }}-build${{ env.BUILD_NUMBER }}
+        run: |
+          cat > notes.md <<EOF
+          **${{ steps.config.outputs.name }}** v${{ steps.config.outputs.version }} (build $BUILD_NUMBER)
+
+          - URL: ${{ steps.config.outputs.url }}
+          - Application ID: \`${{ steps.config.outputs.id }}\`
+          - Commit: ${{ github.sha }}
+          EOF
+          gh release create "$TAG" dist/*.apk \
+            --title "${{ steps.config.outputs.name }} v${{ steps.config.outputs.version }} (build $BUILD_NUMBER)" \
+            --notes-file notes.md \
+            --target "$GITHUB_SHA"
