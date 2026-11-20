@@ -5,6 +5,7 @@ import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -77,12 +78,22 @@ class MainActivity : Activity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             mediaPlaybackRequiresUserGesture = false
+            // Lay out pages that have no <meta name="viewport"> on a desktop-width
+            // viewport and zoom out to fit, like Chrome does. Without this the
+            // WebView squeezes desktop-only pages (CCTV/DVR/router web UIs) into the
+            // phone's width, which can shrink their video area to nothing. Pages
+            // with a viewport tag are not affected.
+            useWideViewPort = true
             loadWithOverviewMode = true
             builtInZoomControls = true // pinch to zoom, where the page allows it
             displayZoomControls = false
         }
         webView.webViewClient = PageClient()
         webView.webChromeClient = ChromeClient()
+        // Debug builds: inspect the page from a PC at chrome://inspect (USB debugging).
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
     }
 
     //========== PULL TO REFRESH ==========
