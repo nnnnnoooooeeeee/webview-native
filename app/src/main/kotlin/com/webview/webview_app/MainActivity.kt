@@ -31,7 +31,8 @@ import java.net.URISyntaxException
 /**
  * Shows the configured URL (assets/webview.json, see [AppConfig]) full screen in
  * the phone's own WebView, with pull-to-refresh, a progress bar, an offline/error
- * screen, back navigation, file uploads and links to other apps (tel:, mailto:...).
+ * screen, back navigation, file uploads, downloads (see [Downloader]) and links
+ * to other apps (tel:, mailto:...).
  */
 class MainActivity : Activity() {
 
@@ -41,6 +42,7 @@ class MainActivity : Activity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var errorView: View
     private lateinit var errorMessage: TextView
+    private lateinit var downloader: Downloader
 
     /** The page's pending <input type="file">, answered in onActivityResult. */
     private var fileCallback: ValueCallback<Array<Uri>>? = null
@@ -90,6 +92,7 @@ class MainActivity : Activity() {
         }
         webView.webViewClient = PageClient()
         webView.webChromeClient = ChromeClient()
+        downloader = Downloader(this, webView).also { it.install() }
         // Debug builds: inspect the page from a PC at chrome://inspect (USB debugging).
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             WebView.setWebContentsDebuggingEnabled(true)
@@ -133,6 +136,7 @@ class MainActivity : Activity() {
 
         override fun onPageFinished(view: WebView, url: String?) {
             injectScrollWatcher()
+            downloader.injectNameWatcher()
             pullToRefresh.finishRefreshing()
         }
 
@@ -228,6 +232,12 @@ class MainActivity : Activity() {
                 ?: data.data?.let { arrayOf(it) }
         }
         callback.onReceiveValue(uris)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (!downloader.onRequestPermissionsResult(requestCode, grantResults)) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
     }
 
     /**

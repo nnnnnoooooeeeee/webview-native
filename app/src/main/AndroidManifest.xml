@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Lets the web page see whether the phone is online (navigator.onLine). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Saving downloads to the Download folder; only Android 9 and older need it. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <!-- appName comes from apps/<app>/config.json (see app/build.gradle.kts). It is a
          plain string, not a resource, so the on-device builder can rewrite it.

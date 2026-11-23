@@ -3,4 +3,8 @@
     <string name="error_title">Tidak dapat memuat halaman</string>
     <string name="error_message">Periksa koneksi jaringan Anda, lalu coba lagi.\n(%1$s)</string>
     <string name="retry">Coba lagi</string>
+    <string name="download_started">Mengunduh %1$s…</string>
+    <string name="download_saved">Tersimpan di folder Download: %1$s</string>
+    <string name="download_failed">Gagal mengunduh file</string>
+    <string name="download_permission_denied">Izinkan akses penyimpanan untuk menyimpan unduhan</string>
 </resources>
